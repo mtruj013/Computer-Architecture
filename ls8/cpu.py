@@ -2,12 +2,17 @@
 
 import sys
 
+
+LDI = 0b10000010
+PRN = 0b01000111
+HLT = 0b00000001
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        self.register = [0] * 8
+        self.reg = [0] * 8
         self.ram = [0] * 256
         self.pc = 0
 
@@ -65,11 +70,39 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        
+        running = True
+        
+        while running:
+            instruction = self.ram[self.pc]
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            #LDI,Set the value of a register to an integer 3B
+            #PRN Print numeric value stored in the given register, 2B
+            if instruction == HLT:
+                running = False
+                self.pc += 1
+            elif instruction == LDI:
+                reg_num = operand_a
+                value = operand_b
+                self.reg[reg_num] = value
+                self.pc += 3
+            elif instruction == PRN:
+                reg_num = operand_a
+                print(self.reg[reg_num])
+                self.pc += 2
+            else:
+                print(f"unknown instruction {instruction} at address {self.pc}")
+                sys.exit(1)
+
+
+
+
     
     def ram_read(self, address):
-    # accept the address to read and return the value stored
-    # there.
+        # accept the address to read and return the value stored
+        # there.
         return self.ram[address]
 
     def ram_write(self, value, address):
