@@ -11,6 +11,11 @@ PUSH = 0b01000101
 CALL = 0b01010000
 RET = 0b00010001
 ADD = 0b10100000
+CMP = 0b10100111
+JMP = 0b01010100
+JEQ = 0b01010101
+JNE = 0b01010110
+
 
 class CPU:
     """Main CPU class."""
@@ -33,6 +38,10 @@ class CPU:
         self.branchtable[CALL] = self.handle_CALL
         self.branchtable[RET] = self.handle_RET
         self.branchtable[ADD] = self.handle_ADD
+        self.branchtable[CMP] = self.handle_CMP
+        self.branchtable[JMP] = self.handle_JMP
+        self.branchtable[JEQ] = self.handle_JEQ
+        self.branchtable[JNE] = self.handle_JNE
         self.reg[7] = 0xF4
         self.sp = self.reg[7]
 
@@ -96,6 +105,18 @@ class CPU:
     def handle_ADD(self, op, operand_a, operand_b):
         self.alu("ADD", operand_a, operand_b)
         self.pc += 3
+
+    def handle_CMP(self, registerA, registerB):
+        pass
+
+    def handle_JMP(self):
+        pass
+
+    def handle_JEQ(self):
+        pass
+
+    def handle_JNE(self):
+        pass
 
     def load(self):
         """Load a program into memory."""
