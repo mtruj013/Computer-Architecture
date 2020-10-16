@@ -2,13 +2,15 @@
 
 import sys
 
-
 LDI = 0b10000010
 PRN = 0b01000111
 HLT = 0b00000001
 MUL = 0b10100010
 POP = 0b01000110
 PUSH = 0b01000101
+CALL = 0b01010000
+RET = 0b00010001
+ADD = 0b10100000
 
 class CPU:
     """Main CPU class."""
@@ -28,6 +30,9 @@ class CPU:
         self.branchtable[MUL] = self.handle_MUL
         self.branchtable[PUSH] = self.handle_PUSH
         self.branchtable[POP] = self.handle_POP
+        self.branchtable[CALL] = self.handle_CALL
+        self.branchtable[RET] = self.handle_RET
+        self.branchtable[ADD] = self.handle_ADD
         self.reg[7] = 0xF4
         self.sp = self.reg[7]
 
@@ -66,6 +71,31 @@ class CPU:
         self.reg[reg_num] = value
         self.sp += 1 # increase stack pointer
         self.pc += 2
+
+    def handle_CALL(self):
+        # Get address of the next instruction after the CALL
+        return_addr = self.pc + 2
+        self.sp -= 1
+        # Push it on the stack
+        # self.handle_PUSH(return_addr)
+        self.ram[self.sp] = return_addr
+        # Get subroutine address from register
+        reg_num = self.ram[self.pc + 1]
+        subroutine_addr = self.reg[reg_num]
+
+        # Jump to it
+        self.pc = subroutine_addr
+
+    def handle_RET(self):
+        # Get return addr from top of stack
+		# Store it in the PC
+        return_addr = self.ram[self.sp]
+        self.sp += 1
+        self.pc = return_addr
+
+    def handle_ADD(self, op, operand_a, operand_b):
+        self.alu("ADD", operand_a, operand_b)
+        self.pc += 3
 
     def load(self):
         """Load a program into memory."""
@@ -160,6 +190,12 @@ class CPU:
                 self.branchtable[instruction]()
             elif instruction == POP:
                 self.branchtable[instruction]()
+            elif instruction == CALL:
+                self.branchtable[instruction]()
+            elif instruction == RET:
+                self.branchtable[instruction]()
+            elif instruction == ADD:
+                self.branchtable[instruction]("ADD", operand_a, operand_b)
             else:
                 print(f"unknown instruction {instruction} at address {self.pc}")
                 sys.exit(1)
