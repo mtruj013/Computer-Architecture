@@ -16,6 +16,35 @@ class CPU:
         self.reg = [0] * 8
         self.ram = [0] * 256
         self.pc = 0
+        self.running = True
+        self.operand_a = self.ram_read(self.pc + 1)
+        self.operand_b = self.ram_read(self.pc + 2)
+        self.branchtable = {}
+        self.branchtable[HLT] = self.handle_HLT
+        self.branchtable[LDI] = self.handle_LDI
+        self.branchtable[PRN] = self.handle_PRN
+        self.branchtable[MUL] = self.handle_MUL
+
+    def handle_HLT(self):
+        self.running = False
+        sys.exit(1)
+        self.pc += 1
+
+    def handle_LDI(self, operand_a, operand_b):
+
+        reg_num = operand_a
+        value = operand_b
+        self.reg[reg_num] = value
+        self.pc += 3
+
+    def handle_PRN(self, operand_a):
+        reg_num = operand_a
+        print(self.reg[reg_num])
+        self.pc += 2
+
+    def handle_MUL(self, op, operand_a, operand_b):
+        self.alu("MUL", operand_a, operand_b)
+        self.pc += 3
 
 
     def load(self):
@@ -87,30 +116,26 @@ class CPU:
     def run(self):
         """Run the CPU."""
         
-        running = True
+        # running = True
         
-        while running:
-            instruction = self.ram[self.pc]
+        while self.running:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
-
-            #LDI,Set the value of a register to an integer 3B
-            #PRN Print numeric value stored in the given register, 2B
+            
+            instruction = self.ram[self.pc]
+            
             if instruction == HLT:
-                running = False
-                self.pc += 1
+            #    self.handle_HLT()
+                self.branchtable[instruction]()
             elif instruction == LDI:
-                reg_num = operand_a
-                value = operand_b
-                self.reg[reg_num] = value
-                self.pc += 3
+                # self.handle_LDI()
+                self.branchtable[instruction](operand_a, operand_b)
             elif instruction == PRN:
-                reg_num = operand_a
-                print(self.reg[reg_num])
-                self.pc += 2
+                # self.handle_PRN()
+                self.branchtable[instruction](operand_a)
             elif instruction == MUL:
-                self.alu("MUL", operand_a, operand_b)
-                self.pc += 3
+                # self.handle_MUL()    
+                self.branchtable[instruction]("MUL", operand_a, operand_b)
             else:
                 print(f"unknown instruction {instruction} at address {self.pc}")
                 sys.exit(1)
