@@ -44,6 +44,9 @@ class CPU:
         self.branchtable[JNE] = self.handle_JNE
         self.reg[7] = 0xF4
         self.sp = self.reg[7]
+        self.equal_fl = 0
+        self.greater_fl = 0
+        self.less_fl = 0
 
 
     def handle_HLT(self):
@@ -106,17 +109,24 @@ class CPU:
         self.alu("ADD", operand_a, operand_b)
         self.pc += 3
 
-    def handle_CMP(self, registerA, registerB):
-        pass
+    def handle_CMP(self, op, reg_a, reg_b):
+        self.alu("CMP", reg_a, reg_b)
+        self.pc += 3
 
-    def handle_JMP(self):
-        pass
+    def handle_JMP(self, address):
+        self.pc = self.reg[address]
 
-    def handle_JEQ(self):
-        pass
+    def handle_JEQ(self, address):
+        if self.equal_fl == 1:
+            self.pc = self.reg[address]
+        else:
+            self.pc += 2
 
-    def handle_JNE(self):
-        pass
+    def handle_JNE(self, address):
+        if self.equal_fl == 0:
+            self.pc = self.reg[address]
+        else:
+            self.pc += 2
 
     def load(self):
         """Load a program into memory."""
@@ -160,6 +170,23 @@ class CPU:
         elif op == "MUL":
             # Multiply the values in two registers together and store the result in registerA.
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "CMP":
+            
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.less_fl = 1
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.greater_fl = 1
+            else:
+                self.equal_fl = 1
+
+
+            # * If registerA is less than registerB, set the Less-than `L` flag to 1,
+            #   otherwise set it to 0. 
+
+            # * If registerA is greater than registerB, set the Greater-than `G` flag
+            #   to 1, otherwise set it to 0.
+            
+            #   * If they are equal, set the Equal `E` flag to 1, otherwise set it to 0.
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -217,6 +244,14 @@ class CPU:
                 self.branchtable[instruction]()
             elif instruction == ADD:
                 self.branchtable[instruction]("ADD", operand_a, operand_b)
+            elif instruction == CMP:
+                self.branchtable[instruction]("MUL", operand_a, operand_b)
+            elif instruction == JMP:
+                self.branchtable[instruction](operand_a)
+            elif instruction == JEQ:
+                self.branchtable[instruction](operand_a)
+            elif instruction == JNE:
+                self.branchtable[instruction](operand_a)
             else:
                 print(f"unknown instruction {instruction} at address {self.pc}")
                 sys.exit(1)
