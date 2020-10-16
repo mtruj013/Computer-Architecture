@@ -7,6 +7,8 @@ LDI = 0b10000010
 PRN = 0b01000111
 HLT = 0b00000001
 MUL = 0b10100010
+POP = 0b01000110
+PUSH = 0b01000101
 
 class CPU:
     """Main CPU class."""
@@ -24,6 +26,11 @@ class CPU:
         self.branchtable[LDI] = self.handle_LDI
         self.branchtable[PRN] = self.handle_PRN
         self.branchtable[MUL] = self.handle_MUL
+        self.branchtable[PUSH] = self.handle_PUSH
+        self.branchtable[POP] = self.handle_POP
+        self.reg[7] = 0xF4
+        self.sp = self.reg[7]
+
 
     def handle_HLT(self):
         self.running = False
@@ -46,6 +53,19 @@ class CPU:
         self.alu("MUL", operand_a, operand_b)
         self.pc += 3
 
+    def handle_PUSH(self):
+        self.sp -= 1 # decrease stack pointer
+        reg_num = self.ram[self.pc + 1]
+        value = self.reg[reg_num]
+        self.ram[self.sp] = value
+        self.pc += 2 # b/c this is 2 bits
+
+    def handle_POP(self):
+        value = self.ram[self.sp]
+        reg_num = self.ram[self.pc + 1]
+        self.reg[reg_num] = value
+        self.sp += 1 # increase stack pointer
+        self.pc += 2
 
     def load(self):
         """Load a program into memory."""
@@ -136,6 +156,10 @@ class CPU:
             elif instruction == MUL:
                 # self.handle_MUL()    
                 self.branchtable[instruction]("MUL", operand_a, operand_b)
+            elif instruction == PUSH:
+                self.branchtable[instruction]()
+            elif instruction == POP:
+                self.branchtable[instruction]()
             else:
                 print(f"unknown instruction {instruction} at address {self.pc}")
                 sys.exit(1)
